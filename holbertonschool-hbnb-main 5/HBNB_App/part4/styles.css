@@ -449,6 +449,8 @@ h1, h2, h3 {
 
 .star-rating {
   display: flex;
+  flex-direction: row-reverse;
+  justify-content: flex-end;
   gap: 8px;
 }
 
@@ -463,10 +465,20 @@ h1, h2, h3 {
   transition: color 0.15s;
 }
 
-.star-rating input[type="radio"]:checked ~ label,
+/* Checked state: highlight the selected star and all lower stars */
+.star-rating input[type="radio"]:checked ~ label {
+  color: var(--accent);
+}
+
+/* When hovering anywhere in the rating, reset checked highlights for clean preview */
+.star-rating:hover input[type="radio"]:checked ~ label {
+  color: var(--border);
+}
+
+/* Hover preview: highlight the hovered star and all lower stars */
 .star-rating label:hover,
 .star-rating label:hover ~ label {
-  color: var(--accent);
+  color: var(--accent) !important;
 }
 
 /* ─── BACK LINK ─── */

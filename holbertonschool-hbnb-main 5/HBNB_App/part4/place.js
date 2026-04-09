@@ -36,17 +36,21 @@ function checkAuthentication(placeId) {
 
 async function fetchPlaceDetails(token, placeId) {
     try {
-        const headers = { 'Content-Type': 'application/json' };
-        if (token) headers['Authorization'] = `Bearer ${token}`;
+        const headers = {};
+        if (token) {
+            headers['Authorization'] = `Bearer ${token}`;
+        }
 
-        const response = await fetch(`http://localhost:5001/api/v1/places/${placeId}`, {
-            method: 'GET',
-            headers: headers
-        });
+        // Fetch place details and reviews in parallel
+        const [placeRes, reviewsRes] = await Promise.all([
+            fetch(`http://localhost:5001/api/v1/places/${placeId}`, { headers }),
+            fetch(`http://localhost:5001/api/v1/places/${placeId}/reviews`, { headers })
+        ]);
 
-        if (response.ok) {
-            const place = await response.json();
-            displayPlaceDetails(place);
+        if (placeRes.ok) {
+            const place = await placeRes.json();
+            const reviews = reviewsRes.ok ? await reviewsRes.json() : [];
+            displayPlaceDetails(place, reviews);
         } else {
             console.error('Failed to fetch place details');
         }
@@ -55,11 +59,19 @@ async function fetchPlaceDetails(token, placeId) {
     }
 }
 
-function displayPlaceDetails(place) {
+function displayPlaceDetails(place, reviews) {
     const details = document.getElementById('place-details');
+    const hostName = place.owner
+        ? `${place.owner.first_name} ${place.owner.last_name}`
+        : 'Unknown';
+
     details.innerHTML = `
         <h1>${place.title}</h1>
         <div class="place-info">
+            <div class="info-item">
+                <p class="label">Host</p>
+                <p class="value">${hostName}</p>
+            </div>
             <div class="info-item">
                 <p class="label">Price per night</p>
                 <p class="value accent">$${place.price}</p>
@@ -80,14 +92,14 @@ function displayPlaceDetails(place) {
     `;
 
     const reviewsList = document.getElementById('reviews-list');
-    if (place.reviews && place.reviews.length > 0) {
-        reviewsList.innerHTML = place.reviews.map(r => `
+    if (reviews && reviews.length > 0) {
+        reviewsList.innerHTML = reviews.map(r => `
             <div class="review-card">
                 <div class="reviewer">
-                    <div class="reviewer-avatar">${r.user_name ? r.user_name[0] : 'U'}</div>
+                    <div class="reviewer-avatar">${r.user_name ? r.user_name[0].toUpperCase() : 'U'}</div>
                     <span class="reviewer-name">${r.user_name || 'Anonymous'}</span>
                 </div>
-                <p class="review-rating">${'★'.repeat(r.rating)} ${r.rating}/5</p>
+                <p class="review-rating">${'★'.repeat(r.rating)}${'☆'.repeat(5 - r.rating)} ${r.rating}/5</p>
                 <p class="review-comment">${r.text}</p>
             </div>
         `).join('');
@@ -95,6 +107,7 @@ function displayPlaceDetails(place) {
         reviewsList.innerHTML = '<p>No reviews yet.</p>';
     }
 
+    // Set the add-review link with the correct place ID
     const addReviewDiv = document.getElementById('add-review');
     addReviewDiv.innerHTML = `<a href="add_review.html?id=${place.id}" class="details-button">Add a Review</a>`;
 }
