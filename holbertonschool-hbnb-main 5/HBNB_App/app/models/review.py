@@ -78,9 +78,13 @@ class Review(BaseModel):
     def to_dict(self):
         base = super().to_dict()
         base.update({
-            "text":     self.text,
-            "rating":   self.rating,
-            "place_id": self.place_id,
-            "user_id":  self.user_id,
+            "text":      self.text,
+            "rating":    self.rating,
+            "place_id":  self.place_id,
+            "user_id":   self.user_id,
+            "user_name": (
+                f"{self.user.first_name} {self.user.last_name}"
+                if self.user else "Anonymous"
+            ),
         })
         return base
