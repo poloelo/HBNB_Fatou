@@ -13,13 +13,13 @@ PART4_DIR = os.path.join(os.path.dirname(__file__), 'part4')
 
 
 @app.route('/')
-def root():
+def frontend_index():
     """Serve the main page."""
     return send_from_directory(PART4_DIR, 'index.html')
 
 
 @app.route('/<path:filename>')
-def frontend(filename):
+def frontend_static(filename):
     """Serve static frontend files from the part4/ directory."""
     return send_from_directory(PART4_DIR, filename)
 
